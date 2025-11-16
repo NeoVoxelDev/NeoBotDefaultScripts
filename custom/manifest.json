@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "name": "Custom",
+    "author": "NeoVoxelDev Team",
+    "version": "1.0.0",
+    "entrypoint": "custom.js",
+    "description": "A script which is used to add some custom qq commands",
+    "loadbefore": ["Message Forwarding"],
+    "loadafter": ["Whitelist"],
+    "depends": ["Util"]
+}

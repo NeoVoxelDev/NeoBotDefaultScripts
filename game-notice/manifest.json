@@ -1,0 +1,9 @@
+{
+    "schema_version": 1,
+    "name": "Game Notice",
+    "author": "NeoVoxelDev Team",
+    "version": "1.0.0",
+    "entrypoint": "game_notice.js",
+    "description": "A script which is used to notice the game status to the qq group",
+    "depends": ["Util"]
+}

@@ -1,0 +1,8 @@
+{
+    "schema_version": 1,
+    "name": "Util",
+    "author": "NeoVoxelDev Team",
+    "version": "1.0.0",
+    "entrypoint": "util.js",
+    "description": "A script collection for various utility functions"
+}

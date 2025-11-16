@@ -1,0 +1,9 @@
+{
+    "schema_version": 1,
+    "name": "Message Forwarding",
+    "author": "NeoVoxelDev Team",
+    "version": "1.0.0",
+    "entrypoint": "message_forwarding.js",
+    "description": "A script which is used to forward messages between groups and games",
+    "depends": ["Util"]
+}
