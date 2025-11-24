@@ -237,7 +237,7 @@ declare interface ScriptManager {
     parse(content: string): string
     addJsMethod(name: string, method: (arg: any[]) => any): void
     hasJsMethod(name: string): boolean
-    callJsMethod(name: string, args: any[]): any
+    callJsMethod(name: string, ...args: any[]): any
 }
 
 declare const scriptManager: ScriptManager
@@ -251,6 +251,12 @@ declare interface NeoBot {
     getOnlinePlayer(name: string): Player
     getOfflinePlayer(name: string): OfflinePlayer
     parsePlaceholder(message: string, player: Player): string
+    submit(task: () => void): void
+    submitAsync(task: () => void): void
+    submit(task: () => void, delay: number): void
+    submitAsync(task: () => void, delay: number): void
+    submit(task: () => void, delay: number, period: number): void
+    submitAsync(task: () => void, delay: number, period: number): void
 }
 
 declare const plugin: NeoBot

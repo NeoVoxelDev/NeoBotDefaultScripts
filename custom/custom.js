@@ -143,46 +143,38 @@ if (generalConfig.has("custom")) {
 
 qq.register("GroupMessageEvent", (event) => {
   const jsonMessage = event.getJsonMessage()
-  const jsonArray = JSON.parse(jsonMessage)
-  let newMessage = ""
-  for (const item of jsonArray) {
-    if (item.type === "text") {
-      newMessage += item.data.text
-    } else {
-      return
-    }
-  }
+  const newMessage = scriptManager.callJsMethod("util.parseTextJsonMessage", jsonMessage)
   for (const option of customOptions) {
     if (!option.enable) continue
     const result = option.matchCommand(newMessage)
     if (!result["matched"]) {
       continue
     }
-    BetterQQ.addNoForward(event.getMessageId())
+    scriptManager.callJsMethod("util.addNoForward", event.getMessageId())
     if (scriptManager.hasJsMethod("queryBinds")) {
       const binds = scriptManager.callJsMethod("queryBinds", event.getSenderId())
       if (binds.length > 0) {
         let player;
         if (binds.length <= option.chooseAccount) {
-          player = BetterGame.dynamicGetPlayer(binds[0])
-        } else player = BetterGame.dynamicGetPlayer(binds[option.chooseAccount])
+          player = scriptManager.callJsMethod("dynamicGetPlayer", binds[0])
+        } else player = scriptManager.callJsMethod("dynamicGetPlayer", binds[option.chooseAccount])
         let outputResult = option.output[Math.floor(Math.random() * option.output.length)]
         for (const key in result) {
           outputResult = outputResult.replaceAll("${" + key + "}", result[key])
         }
         if (option.format) {
-          outputResult = Formatter.gameToQQ(outputResult, player)
+          outputResult = scriptManager.callJsMethod("util.gameToQQ", outputResult)
         }
-        BetterQQ.sendGroupTextMessage(event.getGroupId(), plugin.parsePlaceholder(outputResult, player))
+        scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), plugin.parsePlaceholder(outputResult, player))
       } else {
         let outputResult = option.unbindOutput[Math.floor(Math.random() * option.unbindOutput.length)]
         for (const key in result) {
           outputResult = outputResult.replaceAll("${" + key + "}", result[key])
         }
         if (option.format) {
-          outputResult = Formatter.gameToQQ(outputResult, null)
+          outputResult = scriptManager.callJsMethod("util.gameToQQ", outputResult)
         }
-        BetterQQ.sendGroupTextMessage(event.getGroupId(), plugin.parsePlaceholder(outputResult, null))
+        scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), plugin.parsePlaceholder(outputResult, null))
       }
     }
   }

@@ -16,14 +16,8 @@ gameEvent.register("JoinEvent", (event) => {
   if (!generalConfig.getBoolean("game-notice.join.enable")) return
   const message = messageConfig.getString("game-notice.on-join")
     .replaceAll("${playerName}", event.getName())
-  const json = [{
-    "type": "text",
-    "data": {
-      "text": message
-    }
-  }];
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
-    qq.sendGroupMessage(groupId, JSON.stringify(json))
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, message)
   }
 })
 
@@ -31,14 +25,8 @@ gameEvent.register("QuitEvent", (event) => {
   if (!generalConfig.getBoolean("game-notice.quit.enable")) return
   const message = messageConfig.getString("game-notice.on-quit")
     .replaceAll("${playerName}", event.getName())
-  const json = [{
-    "type": "text",
-    "data": {
-      "text": message
-    }
-  }];
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
-    qq.sendGroupMessage(groupId, JSON.stringify(json))
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, message)
   }
 })
 
@@ -47,39 +35,21 @@ gameEvent.register("DeathEvent", (player, message) => {
   const newMessage = messageConfig.getString("game-notice.on-die")
     .replaceAll("${playerName}", player.getName())
     .replaceAll("${message}", message)
-  const json = [{
-    "type": "text",
-    "data": {
-      "text": newMessage
-    }
-  }];
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
-    qq.sendGroupMessage(groupId, JSON.stringify(json))
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, newMessage)
   }
 })
 
 gameEvent.register("PluginEnableEvent", () => {
   if (!generalConfig.getBoolean("game-notice.server-start.enable")) return
-  const json = [{
-    "type": "text",
-    "data": {
-      "text": messageConfig.getString("game-notice.on-server-start")
-    }
-  }];
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
-    qq.sendGroupMessage(groupId, JSON.stringify(json))
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("game-notice.on-server-start"))
   }
 })
 
 gameEvent.register("PluginDisableEvent", () => {
   if (!generalConfig.getBoolean("game-notice.server-stop.enable")) return
-  const json = [{
-    "type": "text",
-    "data": {
-      "text": messageConfig.getString("game-notice.on-server-stop")
-    }
-  }];
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
-    qq.sendGroupMessage(groupId, JSON.stringify(json))
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("game-notice.on-server-stop"))
   }
 })

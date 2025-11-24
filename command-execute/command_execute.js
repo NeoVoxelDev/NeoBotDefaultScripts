@@ -25,15 +25,7 @@ console.log("Loaded command executor: " + executorName)
 
 qq.register("GroupMessageEvent", (event) => {
   const jsonMessage = event.getJsonMessage()
-  const jsonArray = JSON.parse(jsonMessage)
-  let newMessage = ""
-  for (const item of jsonArray) {
-    if (item.type === "text") {
-      newMessage += item.data.text
-    } else {
-      return
-    }
-  }
+  const newMessage = scriptManager.callJsMethod("util.parseTextJsonMessage", jsonMessage)
   beforeExecute(event, newMessage)
 })
 
@@ -42,7 +34,7 @@ function beforeExecute(event, newMessage) {
     for (const prefix of generalConfig.getStringArray("command-execute.prefix")) {
       if (newMessage.startsWith(prefix)) {
         const command = newMessage.slice(prefix.length)
-        BetterQQ.addNoForward(event.getMessageId())
+        scriptManager.callJsMethod("util.addNoForward", event.getMessageId())
         const allows = generalConfig.getStringArray("command-execute.allow")
         if (allows.includes("$USER") || allows.includes(event.getSenderId())) {
           execute(command, event.getGroupId())
@@ -69,13 +61,14 @@ function execute(command, groupId) {
       plugin.submitAsync(() => {
         const result = executor.getResult()
         if (generalConfig.getBoolean("command-execute.format")) {
-          BetterQQ.sendGroupTextMessage(groupId, `[NeoBot] 命令执行结果: \n${Formatter.gameToQQ(result)}`)
+          scriptManager.callJsMethod("util.sendGroupTextMessage",
+            groupId, `[NeoBot] 命令执行结果: \n${scriptManager.callJsMethod("util.gameToQQ", result)}`)
         } else {
-          BetterQQ.sendGroupTextMessage(groupId, `[NeoBot] 命令执行结果: \n${result}`)
+          scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, `[NeoBot] 命令执行结果: \n${result}`)
         }
       }, generalConfig.getInt("command-execute.delay"))
     })
   } catch (e) {
-    BetterQQ.sendGroupTextMessage(groupId, `[NeoBot] 执行命令失败: ${e}`)
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, `[NeoBot] 执行命令失败: ${e}`)
   }
 }

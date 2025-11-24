@@ -53,7 +53,6 @@ class BetterQQ {
     return newMessage
   }
 
-  // for
   static addNoForward(messageId) {
     if (scriptManager.hasJsMethod("addGroupNoForward")) {
       scriptManager.callJsMethod("addGroupNoForward", [messageId])
@@ -70,3 +69,11 @@ class BetterGame {
     }
   }
 }
+
+scriptManager.addJsMethod("util.configToGame", Formatter.configToGame)
+scriptManager.addJsMethod("util.gameToQQ", Formatter.gameToQQ)
+scriptManager.addJsMethod("util.sendGroupTextMessage", BetterQQ.sendGroupTextMessage)
+scriptManager.addJsMethod("util.parseTextJsonMessage", BetterQQ.parseTextJsonMessage)
+scriptManager.addJsMethod("util.parseJsonMessage", BetterQQ.parseJsonMessage)
+scriptManager.addJsMethod("util.dynamicGetPlayer", BetterGame.dynamicGetPlayer)
+scriptManager.addJsMethod("util.addNoForward", BetterQQ.addNoForward)

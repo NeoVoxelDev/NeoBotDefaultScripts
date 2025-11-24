@@ -22,7 +22,7 @@ gameEvent.register("ChatEvent", (event) => {
   const name = event.getPlayer().getName()
   let message = event.getMessage()
   if (generalConfig.getBoolean("chat-forward.to-qq.format")) {
-    message = Formatter.gameToQQ(message)
+    message = scriptManager.callJsMethod("util.gameToQQ", message)
   }
   if (generalConfig.getInt("chat-forward.to-qq.max-length") > 0) {
     const maxLength = generalConfig.getInt("chat-forward.to-qq.max-length") -
@@ -32,14 +32,8 @@ gameEvent.register("ChatEvent", (event) => {
   let format = messageConfig.getString("chat-forward.to-qq");
   format = format.replaceAll("${playerName}", name)
   format = format.replaceAll("${message}", message)
-  const json = [{
-    "type": "text",
-    "data": {
-      "text": format
-    }
-  }];
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
-    qq.sendGroupMessage(groupId, JSON.stringify(json))
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, format)
   }
 })
 
@@ -54,7 +48,7 @@ qq.register("GroupMessageEvent", (event) => {
       const senderId = event.getSenderId()
       const message = event.getJsonMessage()
       qq.getGroupMemberInfo(groupId, senderId, (info) => {
-        let newMessage = BetterQQ.parseJsonMessage(message)
+        let newMessage = scriptManager.callJsMethod("util.parseJsonMessage", message)
         let name = info.getCard()
         if (name === "") {
           name = info.getNickname()
@@ -69,7 +63,7 @@ qq.register("GroupMessageEvent", (event) => {
         format = format.replaceAll("${groupId}", groupId)
         format = format.replaceAll("${message}", newMessage)
         format = format.replaceAll("${senderId}", senderId)
-        plugin.broadcast(Formatter.configToGame(format))
+        plugin.broadcast(scriptManager.callJsMethod("util.configToGame", format))
       })
     }
   }

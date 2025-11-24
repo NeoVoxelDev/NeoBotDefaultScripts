@@ -45,28 +45,28 @@ gameEvent.register("LoginEvent", (event) => {
 qq.register("GroupMessageEvent", (event) => {
   if (!generalConfig.getBoolean("whitelist.enable")) return
   const jsonMessage = event.getJsonMessage()
-  let newMessage = BetterQQ.parseTextJsonMessage(jsonMessage)
+  let newMessage = scriptManager.callJsMethod("util.parseTextJsonMessage", jsonMessage)
   if (newMessage === undefined) return
   for (const prefix of generalConfig.getStringArray("whitelist.prefix.bind")) {
     if (newMessage.startsWith(prefix)) {
-      BetterQQ.addNoForward(event.getMessageId())
+      scriptManager.callJsMethod("util.addNoForward", event.getMessageId())
       bind(event.getGroupId(), event.getSenderId(), newMessage.substring(prefix.length))
     }
   }
   for (const prefix of generalConfig.getStringArray("whitelist.prefix.unbind")) {
     if (newMessage.startsWith(prefix)) {
-      BetterQQ.addNoForward(event.getMessageId())
+      scriptManager.callJsMethod("util.addNoForward", event.getMessageId())
       unbind(event.getGroupId(), event.getSenderId(), newMessage.substring(prefix.length))
     }
   }
   if (generalConfig.getBoolean("whitelist.admin.bind.enable")) {
     for (const prefix of generalConfig.getStringArray("whitelist.admin.bind.prefix")) {
       if (newMessage.startsWith(prefix)) {
-        BetterQQ.addNoForward(event.getMessageId())
+        scriptManager.callJsMethod("util.addNoForward", event.getMessageId())
         try {
           adminBind(event.getGroupId(), newMessage.split(" ")[1], newMessage.split(" ")[2])
         } catch (e) {
-          BetterQQ.sendGroupTextMessage(event.getGroupId(), messageConfig.getString("whitelist.error")
+          scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), messageConfig.getString("whitelist.error")
             .replaceAll("${error}", e))
         }
       }
@@ -75,7 +75,7 @@ qq.register("GroupMessageEvent", (event) => {
   if (generalConfig.getBoolean("whitelist.admin.unbind.enable")) {
     for (const prefix of generalConfig.getStringArray("whitelist.admin.unbind.prefix")) {
       if (newMessage.startsWith(prefix)) {
-        BetterQQ.addNoForward(event.getMessageId())
+        scriptManager.callJsMethod("util.addNoForward", event.getMessageId())
         try {
           if (newMessage.split(" ").length === 2) {
             adminUnbind(event.getGroupId(), newMessage.split(" ")[1])
@@ -83,7 +83,7 @@ qq.register("GroupMessageEvent", (event) => {
             adminUnbind(event.getGroupId(), newMessage.split(" ")[1], newMessage.split(" ")[2])
           }
         } catch (e) {
-          BetterQQ.sendGroupTextMessage(event.getGroupId(), messageConfig.getString("whitelist.error")
+          scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), messageConfig.getString("whitelist.error")
             .replaceAll("${error}", e))
         }
       }
@@ -102,7 +102,7 @@ function adminBind(groupId, qqId, playerName) {
       count += players.length
     }
     if (count >= generalConfig.getInt("whitelist.max-bind-count")) {
-      BetterQQ.sendGroupTextMessage(groupId, messageConfig.getString("whitelist.bind-too-many"))
+      scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-too-many"))
       return
     }
     let remove = false
@@ -126,7 +126,8 @@ function adminBind(groupId, qqId, playerName) {
     let playerData = [playerName]
     table.insert().column("qq", qqId).column("players", "'" + JSON.stringify(playerData) + "'").execute()
   }
-  BetterQQ.sendGroupTextMessage(groupId, messageConfig.getString("whitelist.bind-success"))
+  scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-success")
+    .replaceAll("${player}", playerName))
 }
 
 function bind(groupId, qqId, playerName) {
@@ -139,12 +140,12 @@ function bind(groupId, qqId, playerName) {
       count += players.length
     }
     if (count >= generalConfig.getInt("whitelist.max-bind-count")) {
-      BetterQQ.sendGroupTextMessage(groupId, messageConfig.getString("whitelist.bind-too-many"))
+      scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-too-many"))
       return
     }
     for (const player of players) {
       if (player === playerName) {
-        BetterQQ.sendGroupTextMessage(groupId, messageConfig.getString("whitelist.player-already-bind"))
+        scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.player-already-bind"))
         return
       }
     }
@@ -158,7 +159,8 @@ function bind(groupId, qqId, playerName) {
     let playerData = [playerName]
     table.insert().column("qq", qqId).column("players", "'" + JSON.stringify(playerData) + "'").execute()
   }
-  BetterQQ.sendGroupTextMessage(groupId, messageConfig.getString("whitelist.bind-success"))
+  scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-success")
+    .replaceAll("${player}", playerName))
   if (generalConfig.getBoolean("whitelist.change-nickname-on-bind.enable")) {
     let format = generalConfig.getString("whitelist.change-nickname-on-bind.format")
       .replaceAll("${playerName}", playerName)
@@ -168,7 +170,7 @@ function bind(groupId, qqId, playerName) {
 
 function adminUnbind(groupId, qqId) {
   table.update().set("players", "'[]'").where("qq", qqId).execute()
-  BetterQQ.sendGroupTextMessage(groupId, messageConfig.getString("whitelist.unbind-success"))
+  scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
 }
 
 function unbind(groupId, qqId, playerName) {
@@ -178,11 +180,11 @@ function unbind(groupId, qqId, playerName) {
     if (playerData.includes(playerName)) {
       playerData.splice(playerData.indexOf(playerName), 1)
       table.update().set("players", "'" + JSON.stringify(playerData) + "'").where("qq", qqId).execute()
-      BetterQQ.sendGroupTextMessage(groupId, messageConfig.getString("whitelist.unbind-success"))
+      scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
       return
     }
   }
-  BetterQQ.sendGroupTextMessage(groupId, messageConfig.getString("whitelist.player-didnt-bind"))
+  scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.player-didnt-bind"))
 }
 
 scriptManager.addJsMethod("queryBinds", (userId) => {
