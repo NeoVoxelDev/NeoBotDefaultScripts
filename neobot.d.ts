@@ -242,10 +242,14 @@ declare interface ScriptManager {
 
 declare const scriptManager: ScriptManager
 
-declare interface NeoBot {
-    getNeoLogger(): Logger
+declare interface StorageProvider {
     getStorage(): DatabaseStorage
     getStorageType(): string
+}
+
+declare interface NeoBot {
+    getNeoLogger(): Logger
+    getStorageProvider(): StorageProvider
     broadcast(message: string): void;
     getOnlinePlayers(): Player[]
     getOnlinePlayer(name: string): Player

@@ -8,6 +8,7 @@ generalConfig.addOption("whitelist.prefix.unbind", ["解绑 ", "unbind ", "/解�
 generalConfig.addOption("whitelist.unbind-on-leaving", true)
 generalConfig.addOption("whitelist.change-nickname-on-bind.enable", false)
 generalConfig.addOption("whitelist.change-nickname-on-bind.format", "${playerName}")
+generalConfig.addOption("whitelist.admin.bypass-permission", "neobot.whitelist.bypass")
 generalConfig.addOption("whitelist.admin.bind.enable", false)
 generalConfig.addOption("whitelist.admin.bind.prefix", ["强制绑定 ", "/forcebind ", "/abind "])
 generalConfig.addOption("whitelist.admin.unbind.enable", false)
@@ -24,13 +25,13 @@ messageConfig.addOption("whitelist.player-didnt-bind", "该名称未被你绑定
 messageConfig.addOption("whitelist.in-cooldown", "该操作还在冷却中 (${time} 秒)!")
 messageConfig.addOption("whitelist.error", "执行操作时出现了错误: ${error}")
 
-const table = plugin.getStorage().table("neobot_whitelist")
+const table = plugin.getStorageProvider().getStorage().table("neobot_whitelist")
 table.create()
   .column("qq", "BIGINT", "PRIMARY KEY")
   .column("players", "TEXT", "NOT NULL")
   .execute()
 
-const logTable = plugin.getStorage().table("neobot_whitelist_logs")
+const logTable = plugin.getStorageProvider().getStorage().table("neobot_whitelist_logs")
 logTable.create()
   .column("time", "BIGINT", "PRIMARY KEY")
   .column("operator", "BIGINT", "NOT NULL")
