@@ -26,7 +26,7 @@ class BetterQQ {
       if (item.type === "text") {
         newMessage += item.data.text
       } else {
-        return undefined
+        return ""
       }
     }
     return newMessage
