@@ -12,6 +12,8 @@ generalConfig.addOption("whitelist.admin.bind.enable", false)
 generalConfig.addOption("whitelist.admin.bind.prefix", ["强制绑定 ", "/forcebind ", "/abind "])
 generalConfig.addOption("whitelist.admin.unbind.enable", false)
 generalConfig.addOption("whitelist.admin.unbind.prefix", ["强制解绑 ", "/forceunbind ", "/aunbind "])
+generalConfig.addOption("whitelist.cooldown.bind", 60)
+generalConfig.addOption("whitelist.cooldown.unbind", 86400)
 
 messageConfig.addOption("whitelist.unbind", "你还没有绑定账号!\n请先加入QQ群: 114514\n通过 /绑定 你的游戏名 来绑定账号")
 messageConfig.addOption("whitelist.player-already-bind", "该名称已被绑定")
@@ -19,12 +21,22 @@ messageConfig.addOption("whitelist.bind-too-many", "你不能再绑定更多账�
 messageConfig.addOption("whitelist.bind-success", "绑定成功")
 messageConfig.addOption("whitelist.unbind-success", "解绑成功")
 messageConfig.addOption("whitelist.player-didnt-bind", "该名称未被你绑定过")
+messageConfig.addOption("whitelist.in-cooldown", "该操作还在冷却中 (${time} 秒)!")
 messageConfig.addOption("whitelist.error", "执行操作时出现了错误: ${error}")
 
 const table = plugin.getStorage().table("neobot_whitelist")
 table.create()
   .column("qq", "BIGINT", "PRIMARY KEY")
   .column("players", "TEXT", "NOT NULL")
+  .execute()
+
+const logTable = plugin.getStorage().table("neobot_whitelist_logs")
+logTable.create()
+  .column("time", "BIGINT", "PRIMARY KEY")
+  .column("operator", "BIGINT", "NOT NULL")
+  .column("target", "BIGINT", "NOT NULL")
+  .column("player", "BIGINT", "NOT NULL")
+  .column("action", "TEXT", "NOT NULL")
   .execute()
 
 gameEvent.register("LoginEvent", (event) => {
@@ -64,7 +76,7 @@ qq.register("GroupMessageEvent", (event) => {
       if (newMessage.startsWith(prefix)) {
         scriptManager.callJsMethod("util.addNoForward", event.getMessageId())
         try {
-          adminBind(event.getGroupId(), newMessage.split(" ")[1], newMessage.split(" ")[2])
+          adminBind(event.getGroupId(), event.getSenderId(), newMessage.split(" ")[1], newMessage.split(" ")[2])
         } catch (e) {
           scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), messageConfig.getString("whitelist.error")
             .replaceAll("${error}", e))
@@ -78,9 +90,9 @@ qq.register("GroupMessageEvent", (event) => {
         scriptManager.callJsMethod("util.addNoForward", event.getMessageId())
         try {
           if (newMessage.split(" ").length === 2) {
-            adminUnbind(event.getGroupId(), newMessage.split(" ")[1])
+            adminUnbind(event.getGroupId(), event.getSenderId(), newMessage.split(" ")[1])
           } else {
-            adminUnbind(event.getGroupId(), newMessage.split(" ")[1], newMessage.split(" ")[2])
+            adminUnbind(event.getGroupId(), event.getSenderId(), newMessage.split(" ")[1], newMessage.split(" ")[2])
           }
         } catch (e) {
           scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), messageConfig.getString("whitelist.error")
@@ -92,7 +104,7 @@ qq.register("GroupMessageEvent", (event) => {
 
 })
 
-function adminBind(groupId, qqId, playerName) {
+function adminBind(groupId, operatorId, qqId, playerName) {
   let count = 0
   const result = table.select(["players", "qq"]).where("qq", qqId).execute()
   for (const row of result.map()) {
@@ -126,11 +138,26 @@ function adminBind(groupId, qqId, playerName) {
     let playerData = [playerName]
     table.insert().column("qq", qqId).column("players", "'" + JSON.stringify(playerData) + "'").execute()
   }
+  logTable.insert().column("time", Date.now())
+    .column("operator", operatorId)
+    .column("target", qqId)
+    .column("player", playerName)
+    .column("action", "'ADMIN_BIND'")
+    .execute()
   scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-success")
     .replaceAll("${player}", playerName))
 }
 
 function bind(groupId, qqId, playerName) {
+  const logResult = logTable.select(["time", "operator", "action"]).where("operator", qqId).execute()
+  for (const log of logResult.map()) {
+    if (log.getString("action") === "BIND" && Date.now() - log.getLong("time") < generalConfig.getInt("whitelist.cooldown.bind") * 1000) {
+      scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.in-cooldown")
+        .replaceAll("${time}", generalConfig.getInt("whitelist.cooldown.bind") -
+          Math.floor((Date.now() - log.getLong("time")) / 1000)))
+      return
+    }
+  }
   let count = 0
   const result = table.select(["players", "qq"]).where("qq", qqId).execute()
   for (const row of result.map()) {
@@ -159,6 +186,12 @@ function bind(groupId, qqId, playerName) {
     let playerData = [playerName]
     table.insert().column("qq", qqId).column("players", "'" + JSON.stringify(playerData) + "'").execute()
   }
+  logTable.insert().column("time", Date.now())
+    .column("operator", qqId)
+    .column("target", qqId)
+    .column("player", playerName)
+    .column("action", "'BIND'")
+    .execute()
   scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-success")
     .replaceAll("${player}", playerName))
   if (generalConfig.getBoolean("whitelist.change-nickname-on-bind.enable")) {
@@ -168,18 +201,60 @@ function bind(groupId, qqId, playerName) {
   }
 }
 
-function adminUnbind(groupId, qqId) {
-  table.update().set("players", "'[]'").where("qq", qqId).execute()
-  scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
+function adminUnbind(groupId, operatorId, qqId, playerName = "ALL") {
+  if (playerName === "ALL") {
+    table.update().set("players", "'[]'").where("qq", qqId).execute()
+    logTable.insert().column("time", Date.now())
+      .column("operator", operatorId)
+      .column("target", qqId)
+      .column("player", "ALL")
+      .column("action", "'ADMIN_BIND'")
+      .execute()
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
+  } else {
+    let playerResult = table.select("players").where("qq", qqId).execute()
+    for (const row of playerResult.map()) {
+      let playerData = JSON.parse(row.getString("players"))
+      if (playerData.includes(playerName)) {
+        playerData.splice(playerData.indexOf(playerName), 1)
+        table.update().set("players", "'" + JSON.stringify(playerData) + "'").where("qq", qqId).execute()
+        logTable.insert().column("time", Date.now())
+          .column("operator", operatorId)
+          .column("target", qqId)
+          .column("player", playerName)
+          .column("action", "'ADMIN_UNBIND'")
+          .execute()
+        scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
+        return
+      }
+    }
+    scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.player-didnt-bind"))
+  }
 }
 
+
 function unbind(groupId, qqId, playerName) {
+  const logResult = logTable.select(["time", "operator", "action"]).where("operator", qqId).execute()
+  for (const log of logResult.map()) {
+    if (log.getString("action") === "UNBIND" && Date.now() - log.getLong("time") < generalConfig.getInt("whitelist.cooldown.unbind") * 1000) {
+      scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.in-cooldown")
+        .replaceAll("${time}", generalConfig.getInt("whitelist.cooldown.unbind") -
+          Math.floor((Date.now() - log.getLong("time")) / 1000)))
+      return
+    }
+  }
   let playerResult = table.select("players").where("qq", qqId).execute()
   for (const row of playerResult.map()) {
     let playerData = JSON.parse(row.getString("players"))
     if (playerData.includes(playerName)) {
       playerData.splice(playerData.indexOf(playerName), 1)
       table.update().set("players", "'" + JSON.stringify(playerData) + "'").where("qq", qqId).execute()
+      logTable.insert().column("time", Date.now())
+        .column("operator", qqId)
+        .column("target", qqId)
+        .column("player", playerName)
+        .column("action", "'UNBIND'")
+        .execute()
       scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
       return
     }

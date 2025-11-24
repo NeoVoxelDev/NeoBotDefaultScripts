@@ -257,6 +257,10 @@ declare interface NeoBot {
     submitAsync(task: () => void, delay: number): void
     submit(task: () => void, delay: number, period: number): void
     submitAsync(task: () => void, delay: number, period: number): void
+    submit(scriptName: string, functionName: string, delay: number): void
+    submitAsync(scriptName: string, functionName: string, delay: number): void
+    submit(scriptName: string, functionName: string, delay: number, period: number): void
+    submitAsync(scriptName: string, functionName: string, delay: number, period: number): void
 }
 
 declare const plugin: NeoBot
