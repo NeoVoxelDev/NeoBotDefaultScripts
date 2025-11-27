@@ -208,8 +208,15 @@ declare interface DatabaseModifier {
     execute(): void
 }
 
+declare interface DatabaseDeleter {
+    where(column: string, value: any): DatabaseDeleter
+    where(column: string, operator: string, value: any): DatabaseDeleter
+    execute(): void
+}
+
 declare interface DatabaseTable {
-    delete(): void
+    drop(): void
+    delete(): DatabaseDeleter
     select(columns: string[]): DatabaseSelector
     create(): DatabaseCreator
     update(): DatabaseUpdater

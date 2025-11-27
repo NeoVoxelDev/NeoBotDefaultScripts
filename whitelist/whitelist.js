@@ -40,7 +40,8 @@ table.create()
 
 const logTable = plugin.getStorageProvider().getStorage().table("neobot_whitelist_logs")
 logTable.create()
-  .column("time", "BIGINT", "PRIMARY KEY")
+  .column("id", "INT", "PRIMARY KEY AUTO_INCREMENT")
+  .column("time", "BIGINT", "NOT NULL")
   .column("operator", "BIGINT", "NOT NULL")
   .column("target", "BIGINT", "NOT NULL")
   .column("player", "TEXT", "NOT NULL")
@@ -74,22 +75,30 @@ gameEvent.register("LoginEvent", (event) => {
     if (generalConfig.getString("whitelist.method") === "VERIFY_CODE") {
       const acquireList = logTable
         .select(["time", "note"])
-        .where("action", "'ACQUIRE_VERIFY'")
-        .where("player", "'" + event.getName() + "'")
+        .where("action", "ACQUIRE_VERIFY")
+        .where("player", event.getName())
         .execute()
         .map()
       const last = acquireList.length - 1
-      if (acquireList.length === 0 || Date.now() - acquireList[last].getLong("time") > generalConfig.getInt("whitelist.verify.code-expire-time") * 1000) {
+      if (acquireList.length === 0) {
         const code = generateVerificationCode(generalConfig.getInt("whitelist.verify.code-length"))
         event.disallow(messageConfig.getString("whitelist.unverified").replaceAll("${code}", code))
         logTable.insert()
           .column("time", Date.now())
           .column("operator", -1)
           .column("target", -1)
-          .column("player", "'" + event.getName() + "'")
-          .column("action", "'ACQUIRE_VERIFY'")
-          .column("note", "'" + code + "'")
+          .column("player", event.getName())
+          .column("action", "ACQUIRE_VERIFY")
+          .column("note", code)
           .execute()
+      } else if (Date.now() - acquireList[last].getLong("time") > generalConfig.getInt("whitelist.verify.code-expire-time") * 1000) {
+        const code = generateVerificationCode(generalConfig.getInt("whitelist.verify.code-length"))
+        event.disallow(messageConfig.getString("whitelist.unverified").replaceAll("${code}", code))
+        logTable.update()
+          .where("action", "ACQUIRE_VERIFY")
+          .where("player", event.getName())
+          .set("time", Date.now())
+          .set("note", code)
       } else {
         event.disallow(messageConfig.getString("whitelist.unverified").replaceAll("${code}", acquireList[last].getString("note")))
         return
@@ -176,25 +185,18 @@ function adminBind(groupId, operatorId, qqId, playerName) {
     }
     if (remove) {
       players = players.filter((player) => player !== playerName)
-      table.update().set("players", "'" + JSON.stringify(players) + "'").where("qq", qqId).execute()
+      table.update().set("players", JSON.stringify(players)).where("qq", qqId).execute()
     }
   }
   let playerResult = table.select("players").where("qq", qqId).execute()
   try {
     let playerData = JSON.parse(playerResult.getFirst().getString("players"))
     playerData.push(playerName)
-    table.update().set("players", "'" + JSON.stringify(playerData) + "'").where("qq", qqId).execute()
+    table.update().set("players", JSON.stringify(playerData)).where("qq", qqId).execute()
   } catch (ignored) {
     let playerData = [playerName]
-    table.insert().column("qq", qqId).column("players", "'" + JSON.stringify(playerData) + "'").execute()
+    table.insert().column("qq", qqId).column("players", JSON.stringify(playerData)).execute()
   }
-  logTable.insert().column("time", Date.now())
-    .column("operator", operatorId)
-    .column("target", qqId)
-    .column("player", playerName)
-    .column("action", "'ADMIN_BIND'")
-    .column("note", "'NONE'")
-    .execute()
   scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-success")
     .replaceAll("${player}", playerName))
 }
@@ -232,17 +234,17 @@ function bind(groupId, qqId, playerName) {
   try {
     let playerData = JSON.parse(playerResult.getFirst().getString("players"))
     playerData.push(playerName)
-    table.update().set("players", "'" + JSON.stringify(playerData) + "'").where("qq", qqId).execute()
+    table.update().set("players", JSON.stringify(playerData)).where("qq", qqId).execute()
   } catch (ignored) {
     let playerData = [playerName]
-    table.insert().column("qq", qqId).column("players", "'" + JSON.stringify(playerData) + "'").execute()
+    table.insert().column("qq", qqId).column("players", JSON.stringify(playerData)).execute()
   }
   logTable.insert().column("time", Date.now())
     .column("operator", qqId)
     .column("target", qqId)
     .column("player", playerName)
-    .column("action", "'BIND'")
-    .column("note", "'NONE'")
+    .column("action", "BIND")
+    .column("note", "NONE")
     .execute()
   scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-success")
     .replaceAll("${player}", playerName))
@@ -255,14 +257,7 @@ function bind(groupId, qqId, playerName) {
 
 function adminUnbind(groupId, operatorId, qqId, playerName = "ALL") {
   if (playerName === "ALL") {
-    table.update().set("players", "'[]'").where("qq", qqId).execute()
-    logTable.insert().column("time", Date.now())
-      .column("operator", operatorId)
-      .column("target", qqId)
-      .column("player", "ALL")
-      .column("action", "'ADMIN_BIND'")
-      .column("note", "'NONE'")
-      .execute()
+    table.update().set("players", "[]").where("qq", qqId).execute()
     scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
   } else {
     let playerResult = table.select("players").where("qq", qqId).execute()
@@ -270,14 +265,7 @@ function adminUnbind(groupId, operatorId, qqId, playerName = "ALL") {
       let playerData = JSON.parse(row.getString("players"))
       if (playerData.includes(playerName)) {
         playerData.splice(playerData.indexOf(playerName), 1)
-        table.update().set("players", "'" + JSON.stringify(playerData) + "'").where("qq", qqId).execute()
-        logTable.insert().column("time", Date.now())
-          .column("operator", operatorId)
-          .column("target", qqId)
-          .column("player", playerName)
-          .column("action", "'ADMIN_UNBIND'")
-          .column("note", "'NONE'")
-          .execute()
+        table.update().set("players", JSON.stringify(playerData)).where("qq", qqId).execute()
         scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
         return
       }
@@ -289,8 +277,8 @@ function adminUnbind(groupId, operatorId, qqId, playerName = "ALL") {
 function verify(groupId, qqId, verifyCode) {
   const acquireList = logTable
     .select(["time", "player"])
-    .where("action", "'ACQUIRE_VERIFY'")
-    .where("note", "'" + verifyCode + "'")
+    .where("action", "ACQUIRE_VERIFY")
+    .where("note", verifyCode)
     .execute()
     .map()
   if (acquireList.length === 0) {
@@ -334,17 +322,17 @@ function verify(groupId, qqId, verifyCode) {
   try {
     let playerData = JSON.parse(playerResult.getFirst().getString("players"))
     playerData.push(playerName)
-    table.update().set("players", "'" + JSON.stringify(playerData) + "'").where("qq", qqId).execute()
+    table.update().set("players", JSON.stringify(playerData)).where("qq", qqId).execute()
   } catch (ignored) {
     let playerData = [playerName]
-    table.insert().column("qq", qqId).column("players", "'" + JSON.stringify(playerData) + "'").execute()
+    table.insert().column("qq", qqId).column("players", JSON.stringify(playerData)).execute()
   }
   logTable.insert().column("time", Date.now())
     .column("operator", qqId)
     .column("target", qqId)
-    .column("player", "'" + playerName + "'")
-    .column("action", "'BIND'")
-    .column("note", "'NONE'")
+    .column("player", playerName)
+    .column("action", "BIND")
+    .column("note", "NONE")
     .execute()
   scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.bind-success")
     .replaceAll("${player}", playerName))
@@ -371,12 +359,13 @@ function unbind(groupId, qqId, playerName) {
     let playerData = JSON.parse(row.getString("players"))
     if (playerData.includes(playerName)) {
       playerData.splice(playerData.indexOf(playerName), 1)
-      table.update().set("players", "'" + JSON.stringify(playerData) + "'").where("qq", qqId).execute()
+      table.update().set("players", JSON.stringify(playerData)).where("qq", qqId).execute()
       logTable.insert().column("time", Date.now())
         .column("operator", qqId)
         .column("target", qqId)
         .column("player", playerName)
-        .column("action", "'UNBIND'")
+        .column("action", "UNBIND")
+        .column("note", "NONE")
         .execute()
       scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, messageConfig.getString("whitelist.unbind-success"))
       return
