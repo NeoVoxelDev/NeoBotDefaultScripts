@@ -1,9 +1,9 @@
 {
     "schema_version": 1,
-    "name": "Command Execute",
+    "name": "Command Executor",
     "author": "NeoVoxelDev Team",
     "version": "1.0.0",
-    "entrypoint": "command_execute.js",
+    "entrypoint": "command_executor.js",
     "description": "A script which is used to execute commands in qq",
     "loadbefore": ["Message Forwarding"],
     "depends": ["Util"]
