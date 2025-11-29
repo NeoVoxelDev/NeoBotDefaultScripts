@@ -72,3 +72,31 @@ function execute(command, groupId) {
     scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, `[NeoBot] 执行命令失败: ${e}`)
   }
 }
+
+function executeCommands(commands, callback) {
+  plugin.submit(() => {
+    let completed = 0
+    let results = {}
+    const total = commands.length
+
+    if (total === 0) {
+      callback(results)
+      return
+    }
+
+    for (const command of commands) {
+      const executor = plugin.getExecutorByName(executorName)
+      executor.init()
+      executor.execute(command)
+      plugin.submitAsync(() => {
+        results[command] = executor.getResult()
+        completed++
+        if (completed === total) {
+          callback(results)
+        }
+      }, generalConfig.getInt("command-execute.delay"))
+    }
+  })
+}
+
+scriptManager.addJsMethod("executeCommands", executeCommands)

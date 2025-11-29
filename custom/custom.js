@@ -3,10 +3,12 @@
 customOptions = []
 
 class CustomOption {
-  constructor(enable, command, chooseAccount, output, unbindOutput, format) {
+  constructor(enable, command, chooseAccount, execute, unbindExecute, output, unbindOutput, format) {
     this.enable = enable
     this.command = command
     this.chooseAccount = chooseAccount
+    this.execute = execute
+    this.unbindExecute = unbindExecute
     this.output = output
     this.unbindOutput = unbindOutput
     this.format = format
@@ -134,10 +136,12 @@ if (generalConfig.has("custom")) {
     const enable = config.getBoolean("enable")
     const command = config.getStringArray("command")
     const chooseAccount = config.getInt("choose_account")
+    const execute = config.getStringArray("execute")
+    const unbindExecute = config.getStringArray("unbind_execute")
     const output = parseOutput(config.getStringArray("output"))
     const unbindOutput = parseOutput(config.getStringArray("unbind_output"))
     const format = config.getBoolean("format")
-    customOptions.push(new CustomOption(enable, command, chooseAccount, output, unbindOutput, format))
+    customOptions.push(new CustomOption(enable, command, chooseAccount, execute, unbindExecute, output, unbindOutput, format))
   }
 }
 
@@ -156,25 +160,51 @@ qq.register("GroupMessageEvent", (event) => {
       if (binds.length > 0) {
         let player;
         if (binds.length <= option.chooseAccount) {
-          player = scriptManager.callJsMethod("dynamicGetPlayer", binds[0])
-        } else player = scriptManager.callJsMethod("dynamicGetPlayer", binds[option.chooseAccount])
+          player = scriptManager.callJsMethod("util.dynamicGetPlayer", binds[0])
+        } else player = scriptManager.callJsMethod("util.dynamicGetPlayer", binds[option.chooseAccount])
         let outputResult = option.output[Math.floor(Math.random() * option.output.length)]
         for (const key in result) {
           outputResult = outputResult.replaceAll("${" + key + "}", result[key])
         }
-        if (option.format) {
-          outputResult = scriptManager.callJsMethod("util.gameToQQ", outputResult)
+        if (option.execute.length > 0 && scriptManager.hasJsMethod("executeCommands")) {
+          scriptManager.callJsMethod("executeCommands", option.execute, (results) => {
+            let i = 0
+            for (const command of option.execute) {
+              outputResult = outputResult.replaceAll(`$executes[${i}]`, results[command])
+            }
+            if (option.format) {
+              outputResult = scriptManager.callJsMethod("util.gameToQQ", outputResult)
+            }
+            scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), plugin.parsePlaceholder(outputResult, player))
+          })
+        } else {
+          if (option.format) {
+            outputResult = scriptManager.callJsMethod("util.gameToQQ", outputResult)
+          }
+          scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), plugin.parsePlaceholder(outputResult, player))
         }
-        scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), plugin.parsePlaceholder(outputResult, player))
       } else {
         let outputResult = option.unbindOutput[Math.floor(Math.random() * option.unbindOutput.length)]
         for (const key in result) {
           outputResult = outputResult.replaceAll("${" + key + "}", result[key])
         }
-        if (option.format) {
-          outputResult = scriptManager.callJsMethod("util.gameToQQ", outputResult)
+        if (option.unbindExecute.length > 0 && scriptManager.hasJsMethod("executeCommands")) {
+          scriptManager.callJsMethod("executeCommands", option.unbindExecute, (results) => {
+            let i = 0
+            for (const command of option.unbindExecute) {
+              outputResult = outputResult.replaceAll(`$executes[${i}]`, results[command])
+            }
+            if (option.format) {
+              outputResult = scriptManager.callJsMethod("util.gameToQQ", outputResult)
+            }
+            scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), plugin.parsePlaceholder(outputResult, null))
+          })
+        } else {
+          if (option.format) {
+            outputResult = scriptManager.callJsMethod("util.gameToQQ", outputResult)
+          }
+          scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), plugin.parsePlaceholder(outputResult, null))
         }
-        scriptManager.callJsMethod("util.sendGroupTextMessage", event.getGroupId(), plugin.parsePlaceholder(outputResult, null))
       }
     }
   }
