@@ -54,11 +54,11 @@ function beforeExecute(event, newMessage) {
 
 function execute(command, groupId) {
   try {
-    plugin.submit(() => {
+    plugin.getScriptScheduler().submit(() => {
       const executor = plugin.getExecutorByName(executorName)
       executor.init()
       executor.execute(command)
-      plugin.submitAsync(() => {
+      plugin.getScriptScheduler().submitAsync(() => {
         const result = executor.getResult()
         if (generalConfig.getBoolean("command-execute.format")) {
           scriptManager.callJsMethod("util.sendGroupTextMessage",
@@ -74,7 +74,7 @@ function execute(command, groupId) {
 }
 
 function executeCommands(commands, callback) {
-  plugin.submit(() => {
+  plugin.getScriptScheduler().submit(() => {
     let completed = 0
     let results = {}
     const total = commands.length
@@ -88,7 +88,7 @@ function executeCommands(commands, callback) {
       const executor = plugin.getExecutorByName(executorName)
       executor.init()
       executor.execute(command)
-      plugin.submitAsync(() => {
+      plugin.getScriptScheduler().submitAsync(() => {
         results[command] = executor.getResult()
         completed++
         if (completed === total) {

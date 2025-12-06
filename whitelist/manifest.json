@@ -1,10 +1,11 @@
 {
     "schema_version": 1,
+    "id": "whitelist",
     "name": "Whitelist",
     "author": "NeoVoxelDev Team",
     "version": "1.0.0",
     "entrypoint": "whitelist.js",
     "description": "A script which is used to manage a qq whitelist for a server",
-    "loadbefore": ["Message Forwarding"],
-    "depends": ["Util"]
+    "loadbefore": ["message_forwarding"],
+    "depends": ["util"]
 }

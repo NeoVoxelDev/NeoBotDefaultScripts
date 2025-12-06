@@ -254,14 +254,7 @@ declare interface StorageProvider {
     getStorageType(): string
 }
 
-declare interface NeoBot {
-    getNeoLogger(): Logger
-    getStorageProvider(): StorageProvider
-    broadcast(message: string): void;
-    getOnlinePlayers(): Player[]
-    getOnlinePlayer(name: string): Player
-    getOfflinePlayer(name: string): OfflinePlayer
-    parsePlaceholder(message: string, player: Player): string
+declare interface Scheduler {
     submit(task: () => void): void
     submitAsync(task: () => void): void
     submit(task: () => void, delay: number): void
@@ -272,6 +265,17 @@ declare interface NeoBot {
     submitAsync(scriptName: string, functionName: string, delay: number): void
     submit(scriptName: string, functionName: string, delay: number, period: number): void
     submitAsync(scriptName: string, functionName: string, delay: number, period: number): void
+}
+
+declare interface NeoBot {
+    getNeoLogger(): Logger
+    getStorageProvider(): StorageProvider
+    getScriptScheduler(): Scheduler
+    broadcast(message: string): void;
+    getOnlinePlayers(): Player[]
+    getOnlinePlayer(name: string): Player
+    getOfflinePlayer(name: string): OfflinePlayer
+    parsePlaceholder(message: string, player: Player): string
 }
 
 declare const plugin: NeoBot

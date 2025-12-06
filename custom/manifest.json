@@ -1,11 +1,12 @@
 {
     "schema_version": 1,
+    "id": "custom",
     "name": "Custom",
     "author": "NeoVoxelDev Team",
     "version": "1.0.0",
     "entrypoint": "custom.js",
     "description": "A script which is used to add some custom qq commands",
-    "loadbefore": ["Message Forwarding", "Command Execute"],
-    "loadafter": ["Whitelist"],
-    "depends": ["Util"]
+    "loadbefore": ["message_forwarding", "command_executor"],
+    "loadafter": ["whitelist"],
+    "depends": ["util"]
 }

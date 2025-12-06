@@ -1,5 +1,6 @@
 {
     "schema_version": 1,
+    "id": "util",
     "name": "Util",
     "author": "NeoVoxelDev Team",
     "version": "1.0.0",
