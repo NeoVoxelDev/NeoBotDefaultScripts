@@ -1,3 +1,7 @@
+declare interface Enum {
+    toString(): string;
+}
+
 declare interface QQEvent {
     getSelfId(): number
     getTime(): number
@@ -57,6 +61,17 @@ declare interface BasicInfo {
     getNickname(): string
 }
 
+declare interface FriendInfo extends BasicInfo {
+    getRemark(): string
+}
+
+declare interface GroupInfo {
+    getGroupId(): number
+    getGroupName(): string
+    getGroupMemberCount(): number
+    getGroupMaxMemberCount(): number
+}
+
 declare interface GroupMemberInfo {
     getGroupId(): number
     getUserId(): number
@@ -70,6 +85,8 @@ declare interface GroupMemberInfo {
     getTitle(): string
     getTitleExpireTime(): number
     getCardChangeable(): boolean
+    getRole(): Enum
+    getSex(): Enum
 }
 
 declare interface QQ {
@@ -85,8 +102,14 @@ declare interface QQ {
     rejectGroupRequest(flag: string, type: string): void
     rejectFriendRequest(flag: string): void
     approveFriendRequest(flag: string): void
+    setGroupSpecialTitle(groupId: number, userId: number, title: string, duration: number): void
+    setGroupWholeBan(groupId: number, enable: boolean): void
+    recallMessage(messageId: number): void
     getGroupMemberList(groupId: number, callback: (arg: BasicInfo[]) => void): void
     getGroupMemberInfo(groupId: number, userId: number, callback: (arg: GroupMemberInfo) => void): void
+    getGroupList(callback: (arg: GroupInfo[]) => void): void
+    getFriendList(callback: (arg: FriendInfo[]) => void): void
+    getGroupInfo(groupId: number, callback: (arg: GroupInfo) => void): void
 }
 
 declare const qq: QQ
@@ -276,6 +299,7 @@ declare interface NeoBot {
     getOnlinePlayer(name: string): Player
     getOfflinePlayer(name: string): OfflinePlayer
     parsePlaceholder(message: string, player: Player): string
+    getPlatform(): string
 }
 
 declare const plugin: NeoBot
