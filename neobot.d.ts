@@ -272,6 +272,33 @@ declare interface ScriptManager {
 
 declare const scriptManager: ScriptManager
 
+
+declare interface HttpResult {
+    getStatusCode(): number
+    getResponseContent(): string
+}
+
+declare interface HttpRequest {
+    timeout(timeout: number): HttpRequest
+    connectTimeout(timeout: number): HttpRequest
+    readTimeout(timeout: number): HttpRequest
+    header(name: string, value: string): HttpRequest
+    connect(): HttpResult
+}
+
+declare interface HttpBuilder {
+    get(): HttpRequest
+    post(): HttpRequest
+    put(): HttpRequest
+    delete(): HttpRequest
+}
+
+declare interface Http {
+    builder(url: string): HttpBuilder
+}
+
+declare const http: Http
+
 declare interface StorageProvider {
     getStorage(): DatabaseStorage
     getStorageType(): string
