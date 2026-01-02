@@ -109,7 +109,7 @@ gameEvent.register("LoginEvent", (event) => {
 
 qq.register("GroupMessageEvent", (event) => {
   if (!generalConfig.getBoolean("whitelist.enable")) return
-  const jsonMessage = event.getJsonMessage()
+  const jsonMessage = event.getMessage().toString()
   let newMessage = scriptManager.callJsMethod("util.parseTextJsonMessage", jsonMessage)
   if (newMessage === undefined) return
   for (const prefix of generalConfig.getStringArray("whitelist.prefix.bind")) {

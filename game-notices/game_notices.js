@@ -15,7 +15,7 @@ generalConfig.addOption("game-notice.server-stop.enable", true)
 gameEvent.register("JoinEvent", (event) => {
   if (!generalConfig.getBoolean("game-notice.join.enable")) return
   const message = messageConfig.getString("game-notice.on-join")
-    .replaceAll("${playerName}", event.getName())
+    .replaceAll("${playerName}", event.getPlayer().getName())
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
     scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, message)
   }
@@ -24,17 +24,17 @@ gameEvent.register("JoinEvent", (event) => {
 gameEvent.register("QuitEvent", (event) => {
   if (!generalConfig.getBoolean("game-notice.quit.enable")) return
   const message = messageConfig.getString("game-notice.on-quit")
-    .replaceAll("${playerName}", event.getName())
+    .replaceAll("${playerName}", event.getPlayer().getName())
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
     scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, message)
   }
 })
 
-gameEvent.register("DeathEvent", (player, message) => {
+gameEvent.register("DeathEvent", (event) => {
   if (!generalConfig.getBoolean("game-notice.die.enable")) return
   const newMessage = messageConfig.getString("game-notice.on-die")
-    .replaceAll("${playerName}", player.getName())
-    .replaceAll("${message}", message)
+    .replaceAll("${playerName}", event.getPlayer().getName())
+    .replaceAll("${message}", event.getMessage())
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
     scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, newMessage)
   }

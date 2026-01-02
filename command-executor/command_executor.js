@@ -24,7 +24,7 @@ for (const sort of generalConfig.getStringArray("command-execute.sort")) {
 console.log("Loaded command executor: " + executorName)
 
 qq.register("GroupMessageEvent", (event) => {
-  const jsonMessage = event.getJsonMessage()
+  const jsonMessage = event.getMessage().toString()
   const newMessage = scriptManager.callJsMethod("util.parseTextJsonMessage", jsonMessage)
   beforeExecute(event, newMessage)
 })

@@ -1,6 +1,8 @@
-declare interface Enum {
+declare interface Object {
     toString(): string;
 }
+
+declare interface Enum extends Object {}
 
 declare interface QQEvent {
     getSelfId(): number
@@ -12,7 +14,7 @@ declare interface GroupMessageEvent extends QQEvent {
     getMessageId(): number
     getSenderId(): number
     getRawMessage(): string
-    getJsonMessage(): string
+    getMessage(): Object // getMessage().toString() is a json array
 }
 
 declare interface GroupMessageEvent extends QQEvent {
@@ -114,14 +116,22 @@ declare interface QQ {
 
 declare const qq: QQ
 
+declare interface PlayerEvent {
+    getPlayer(): Player
+}
+
 declare interface LoginEvent {
     getName(): string
     disallow(reason: string): void
 }
 
-declare interface JoinEvent extends Player {}
+declare interface JoinEvent extends PlayerEvent {}
 
-declare interface QuitEvent extends Player {}
+declare interface QuitEvent extends PlayerEvent {}
+
+declare interface DeathEvent extends PlayerEvent {
+    getMessage(): string
+}
 
 declare interface ChatEvent {
     getPlayer(): Player

@@ -46,7 +46,7 @@ qq.register("GroupMessageEvent", (event) => {
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
     if (groupId === event.getGroupId()) {
       const senderId = event.getSenderId()
-      const message = event.getJsonMessage()
+      const message = event.getMessage().toString()
       qq.getGroupMemberInfo(groupId, senderId, (info) => {
         let newMessage = scriptManager.callJsMethod("util.parseJsonMessage", message)
         let name = info.getCard()

@@ -146,7 +146,7 @@ if (generalConfig.has("custom")) {
 }
 
 qq.register("GroupMessageEvent", (event) => {
-  const jsonMessage = event.getJsonMessage()
+  const jsonMessage = event.getMessage().toString()
   const newMessage = scriptManager.callJsMethod("util.parseTextJsonMessage", jsonMessage)
   for (const option of customOptions) {
     if (!option.enable) continue
