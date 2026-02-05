@@ -2,9 +2,11 @@
 
 generalConfig.addOption("chat-forward.to-game.enable", true)
 generalConfig.addOption("chat-forward.to-game.max-length", 200)
+generalConfig.addOption("chat-forward.to-game.filter", true)
 generalConfig.addOption("chat-forward.to-game.max-replace", "...")
 generalConfig.addOption("chat-forward.to-qq.enable", true)
 generalConfig.addOption("chat-forward.to-qq.format", true)
+generalConfig.addOption("chat-forward.to-qq.filter", true)
 generalConfig.addOption("chat-forward.to-qq.max-length", 200)
 generalConfig.addOption("chat-forward.to-qq.max-replace", "...")
 
@@ -32,6 +34,9 @@ gameEvent.register("ChatEvent", (event) => {
   let format = messageConfig.getString("chat-forward.to-qq");
   format = format.replaceAll("${playerName}", name)
   format = format.replaceAll("${message}", message)
+  if (generalConfig.getBoolean("chat-forward.to-qq.filter")) {
+    format = scriptManager.callJsMethod("filter.filterMessage", format)
+  }
   for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
     scriptManager.callJsMethod("util.sendGroupTextMessage", groupId, format)
   }
@@ -63,6 +68,9 @@ qq.register("GroupMessageEvent", (event) => {
         format = format.replaceAll("${groupId}", groupId)
         format = format.replaceAll("${message}", newMessage)
         format = format.replaceAll("${senderId}", senderId)
+        if (generalConfig.getBoolean("chat-forward.to-game.filter")) {
+          format = scriptManager.callJsMethod("filter.filterMessage", format)
+        }
         plugin.broadcast(scriptManager.callJsMethod("util.configToGame", format))
       })
     }

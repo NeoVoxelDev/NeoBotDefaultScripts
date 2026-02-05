@@ -108,4 +108,4 @@ function filter(message) {
 }
 
 
-scriptManager.addJsMethod("filter", filter)
+scriptManager.addJsMethod("filter.filterMessage", filter)
