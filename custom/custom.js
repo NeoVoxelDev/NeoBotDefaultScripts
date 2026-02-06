@@ -146,6 +146,13 @@ if (generalConfig.has("custom")) {
 }
 
 qq.register("GroupMessageEvent", (event) => {
+  let flag = false
+  for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
+    if (groupId === event.getGroupId()) {
+      flag = true
+    }
+  }
+  if (!flag) return
   const jsonMessage = event.getMessage().toString()
   const newMessage = scriptManager.callJsMethod("util.parseTextJsonMessage", jsonMessage)
   for (const option of customOptions) {

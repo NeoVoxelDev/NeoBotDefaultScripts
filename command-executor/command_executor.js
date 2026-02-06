@@ -30,6 +30,13 @@ qq.register("GroupMessageEvent", (event) => {
 })
 
 function beforeExecute(event, newMessage) {
+  let flag = false
+  for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
+    if (groupId === event.getGroupId()) {
+      flag = true
+    }
+  }
+  if (!flag) return
   if (generalConfig.getBoolean("command-execute.enable")) {
     for (const prefix of generalConfig.getStringArray("command-execute.prefix")) {
       if (newMessage.startsWith(prefix)) {

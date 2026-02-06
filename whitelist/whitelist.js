@@ -109,6 +109,13 @@ gameEvent.register("LoginEvent", (event) => {
 
 qq.register("GroupMessageEvent", (event) => {
   if (!generalConfig.getBoolean("whitelist.enable")) return
+  let flag = false
+  for (const groupId of generalConfig.getNumberArray("bot.options.enable-groups")) {
+    if (groupId === event.getGroupId()) {
+      flag = true
+    }
+  }
+  if (!flag) return
   const jsonMessage = event.getMessage().toString()
   let newMessage = scriptManager.callJsMethod("util.parseTextJsonMessage", jsonMessage)
   if (newMessage === undefined) return
