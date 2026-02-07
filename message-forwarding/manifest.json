@@ -3,7 +3,7 @@
     "id": "message_forwarding",
     "name": "Message Forwarding",
     "author": "NeoVoxelDev Team",
-    "version": "1.0.0",
+    "version": "1.0.0.1",
     "entrypoint": "message_forwarding.js",
     "description": "A script which is used to forward messages between groups and games",
     "depends": ["util"]

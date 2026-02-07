@@ -26,7 +26,7 @@ gameEvent.register("ChatEvent", (event) => {
   if (generalConfig.getBoolean("chat-forward.to-qq.format")) {
     message = scriptManager.callJsMethod("util.gameToQQ", message)
   }
-  if (generalConfig.getInt("chat-forward.to-qq.max-length") > 0) {
+  if (message.length > generalConfig.getInt("chat-forward.to-qq.max-length")) {
     const maxLength = generalConfig.getInt("chat-forward.to-qq.max-length") -
       generalConfig.getString("chat-forward.to-qq.max-replace").length
     message = message.substring(0, maxLength) + generalConfig.getString("chat-forward.to-qq.max-replace")
