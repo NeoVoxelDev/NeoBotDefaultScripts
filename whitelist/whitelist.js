@@ -384,3 +384,7 @@ function unbind(groupId, qqId, playerName) {
 scriptManager.addJsMethod("queryBinds", (userId) => {
   return JSON.parse(table.select(["players"]).where("qq", userId).execute().getFirst().getString("players"))
 })
+
+scriptManager.addJsMethod("whitelist.getTable", () => {
+  return table
+})

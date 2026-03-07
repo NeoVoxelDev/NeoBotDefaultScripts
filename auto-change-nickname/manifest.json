@@ -1,0 +1,10 @@
+{
+    "schema_version": 1,
+    "id": "auto_change_nickname",
+    "name": "Auto Change Nickname",
+    "author": "NeoVoxelDev Team",
+    "version": "1.0.0",
+    "entrypoint": "auto_change_nickname.js",
+    "description": "A script which is used to automatically change the nickname of a user",
+    "depends": ["util", "whitelist"]
+}
